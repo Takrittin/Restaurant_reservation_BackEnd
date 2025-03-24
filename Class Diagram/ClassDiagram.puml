@@ -1,0 +1,90 @@
+@startuml
+package "Models" {
+  class User <<entity>> {
+    - id: ObjectId
+    - name: string
+    - email: string
+    - password: string
+    - role: string
+    + register(): void
+    + login(): void
+  }
+
+  class Restaurant <<entity>> {
+    - id: ObjectId
+    - name: string
+    - location: string
+    - phone: string
+    + addRestaurant(): void
+    + updateRestaurant(): void
+    + deleteRestaurant(): void
+  }
+
+  class Reservation <<entity>> {
+    - id: ObjectId
+    - userId: ObjectId
+    - restaurantId: ObjectId
+    - date: Date
+    - time: string
+    + createReservation(): void
+    + cancelReservation(): void
+  }
+}
+
+package "Controllers" {
+  class AuthController <<controller>> {
+    + registerUser(): void
+    + loginUser(): void
+  }
+
+  class RestaurantController <<controller>> {
+    + getRestaurants(): Restaurant[]
+    + addRestaurant(): void
+    + updateRestaurant(): void
+    + deleteRestaurant(): void
+  }
+
+  class ReservationController <<controller>> {
+    + createReservation(): void
+    + cancelReservation(): void
+    + getUserReservations(): Reservation[]
+  }
+}
+
+package "Routes" {
+  class AuthRoutes <<boundary>> {
+    + POST /login
+    + POST /register
+  }
+
+  class RestaurantRoutes <<boundary>> {
+    + GET /restaurants
+    + POST /restaurants
+    + PUT /restaurants/{id}
+    + DELETE /restaurants/{id}
+  }
+
+  class ReservationRoutes <<boundary>> {
+    + POST /reservations
+    + DELETE /reservations/{id}
+    + GET /reservations/user
+  }
+}
+
+package "Middleware" {
+  class AuthMiddleware <<middleware>> {
+    + verifyToken(): boolean
+  }
+}
+
+' Relationships
+User "1" -- "*" Reservation : makes
+Restaurant "1" -- "*" Reservation : has
+ReservationController --> Reservation
+RestaurantController --> Restaurant
+AuthController --> User
+AuthRoutes --> AuthController
+RestaurantRoutes --> RestaurantController
+ReservationRoutes --> ReservationController
+AuthMiddleware -[hidden]-> AuthController
+@enduml

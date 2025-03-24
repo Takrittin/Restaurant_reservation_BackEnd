@@ -1,0 +1,49 @@
+@startuml Add Reservation (POST)
+
+header Add Reservation Sequence Diagram
+footer Page %page% of %lastpage%
+title "Add Reservation (POST)"
+
+participant "Client" as client
+participant "<<JavaScript>>\n:server" as server
+participant "<<router>>\n:reservations" as routerReservations
+participant "<<middleware>>\n:authMiddleware" as authMiddleware
+participant "<<controllers>>\n:reservations" as controllersReservations
+participant "<<model>>\n:Restaurant" as modelRestaurant
+participant "<<model>>\n:Reservation" as modelReservation
+database "<<MongoDB>>\n:restaurants" as RestaurantsDatabase
+database "<<MongoDB>>\n:reservations" as ReservationsDatabase
+
+client->server ++: req.post('/api/v1/restaurants/:restaurantId/reservations', { Authorization: "Bearer token", body })
+server->routerReservations ++: app.use('/api/v1/restaurants/:restaurantId/reservations', reservations)
+routerReservations -> authMiddleware ++: verifyToken(req.headers.Authorization)
+authMiddleware --> controllersReservations --: req.user (includes role)
+
+controllersReservations -> modelRestaurant ++: findById(req.params.restaurantId)
+modelRestaurant -> RestaurantsDatabase ++: Query Restaurant by ID
+RestaurantsDatabase --> modelRestaurant --: restaurantData
+
+alt Restaurant Found
+    controllersReservations --> modelRestaurant --: restaurantData
+else Restaurant Not Found
+    controllersReservations -> client --: response (404 Not Found)
+    return
+end
+
+controllersReservations -> modelReservation ++: find({ user: req.user.id })
+modelReservation -> ReservationsDatabase ++: Query User's Reservations
+ReservationsDatabase --> modelReservation --: reservationsList
+
+alt User Already Has 3 Reservations (Not Admin)
+    controllersReservations -> client --: response (400 Bad Request)
+    return
+end
+
+controllersReservations -> modelReservation ++: create(req.body)
+modelReservation -> ReservationsDatabase ++: Insert New Reservation
+ReservationsDatabase --> modelReservation --: newReservationData
+modelReservation --> controllersReservations --: newReservationData
+
+controllersReservations -> client --: response (201 Created, newReservationData)
+
+@enduml

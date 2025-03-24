@@ -1,0 +1,24 @@
+@startuml Get all Restaurants (GET)
+
+header Restaurant reservation Sequence Diagram
+footer Page %page% of %lastpage%
+title "Get all restaurants (GET)"
+
+participant "Client" as client
+participant "<<server>>\n:API Server" as server
+participant "<<router>>\n:Restaurants Router" as routerRestaurants
+participant "<<controllers>>\n:Restaurants Controller" as controllersRestaurants
+participant "<<model>>\n:Restaurant Model" as modelRestaurant
+database "<<MongoDB>>\n:Restaurants Database" as RestaurantsDatabase
+
+client -> server ++: req.get('/api/restaurants')
+server -> routerRestaurants ++: app.use('/api/restaurants', restaurants)
+routerRestaurants -> controllersRestaurants ++: getRestaurants()
+controllersRestaurants -> modelRestaurant ++: Restaurant.find()
+modelRestaurant -> RestaurantsDatabase ++: Query all restaurants
+RestaurantsDatabase --> modelRestaurant --: List of restaurants
+controllersRestaurants <-- modelRestaurant --: Return list of restaurants
+controllersRestaurants -> server --: Send response with restaurant data
+server -> client --: 200 OK (restaurants data)
+
+@enduml
