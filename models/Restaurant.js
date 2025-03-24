@@ -24,6 +24,10 @@ const RestaurantSchema = new mongoose.Schema({
     close_time: {
         type: String,
         required: [true, 'Please add an close time']
+    },
+    picture: {
+        type: String,
+        required: false
     }
 },{
     toJSON: {virtuals: true},
